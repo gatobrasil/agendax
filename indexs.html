@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agende seu Horário</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .voice-interface {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .voice-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .voice-button:hover {
+            transform: scale(1.1);
+        }
+
+        .voice-button.active {
+            animation: pulse 1.5s infinite;
+            background: #ff6b6b;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 20px rgba(255, 107, 107, 0);
+            }
+        }
+
+        .mic-icon {
+            width: 60px;
+            height: 60px;
+            fill: #667eea;
+        }
+
+        .voice-button.active .mic-icon {
+            fill: white;
+        }
+
+        .status-text {
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .chat-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.assistant {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-button {
+            padding: 14px 28px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .send-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .event-card {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            color: white;
+            animation: slideIn 0.5s ease;
+        }
+
+        .event-card h4 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .event-detail {
+            margin: 8px 0;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tips {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .tips h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .tips ul {
+            color: #856404;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+
+        .tips li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Agende seu Horário</h1>
+            <p>Converse com nossa assistente virtual e marque seu compromisso</p>
+        </div>
+
+        <div class="voice-interface">
+            <button class="voice-button" id="voiceButton" onclick="toggleVoice()">
+                <svg class="mic-icon" viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+            <div class="status-text" id="statusText">Clique para falar</div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message assistant">
+                Olá! 👋 Sou sua assistente virtual de agendamento. Você pode falar comigo clicando no microfone ou digitar sua mensagem abaixo. Como posso ajudá-lo hoje?
+            </div>
+        </div>
+
+        <div class="input-section">
+            <input type="text" class="text-input" id="textInput" placeholder="Ou digite sua mensagem aqui..." onkeypress="handleEnter(event)">
+            <button class="send-button" id="sendButton" onclick="sendMessage()">Enviar</button>
+        </div>
+
+        <div id="eventConfirmation"></div>
+
+        <div class="tips">
+            <h4>💡 Dicas para agendar:</h4>
+            <ul>
+                <li>Diga o tipo de serviço que precisa</li>
+                <li>Informe a data desejada (ex: 15/12/2025)</li>
+                <li>Informe o horário (ex: 14:30)</li>
+                <li>Exemplo: "Quero marcar uma consulta para 20/12/2025 às 10:00"</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONFIGURE SUAS CREDENCIAIS AQUI
+        // ========================================
+        const CONFIG = {
+            elevenLabsKey: 'SUA_ELEVENLABS_API_KEY_AQUI',
+            makeWebhook: 'SUA_MAKE_WEBHOOK_URL_AQUI',
+            agentId: 'de86bcd53ff04668aee9b2c2744fb3900ffe08318436fe35dd4877fcf6065745'
+        };
+        // ========================================
+
+        let isRecording = false;
+        let recognition;
+        let isProcessing = false;
+
+        // Inicializa quando a página carrega
+        window.onload = function() {
+            // Verifica se as credenciais foram configuradas
+            if (CONFIG.elevenLabsKey === 'SUA_ELEVENLABS_API_KEY_AQUI' || 
+                CONFIG.makeWebhook === 'SUA_MAKE_WEBHOOK_URL_AQUI') {
+                addMessage('⚠️ Sistema não configurado. Entre em contato com o administrador.', 'assistant');
+                document.getElementById('voiceButton').disabled = true;
+                document.getElementById('sendButton').disabled = true;
+                document.getElementById('textInput').disabled = true;
+                return;
+            }
+
+            // Inicializa reconhecimento de voz
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.lang = 'pt-BR';
+                recognition.interimResults = false;
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    addMessage(transcript, 'user');
+                    processMessage(transcript);
+                };
+                
+                recognition.onend = function() {
+                    isRecording = false;
+                    updateVoiceButton();
+                };
+
+                recognition.onerror = function(event) {
+                    console.error('Erro no reconhecimento:', event.error);
+                    isRecording = false;
+                    updateVoiceButton();
+                    if (event.error === 'no-speech') {
+                        addMessage('Não consegui ouvir nada. Tente novamente!', 'assistant');
+                    }
+                };
+            } else {
+                document.getElementById('voiceButton').disabled = true;
+                addMessage('⚠️ Seu navegador não suporta reconhecimento de voz. Use o campo de texto abaixo.', 'assistant');
+            }
+        };
+
+        function toggleVoice() {
+            if (!recognition) {
+                addMessage('Reconhecimento de voz não disponível. Use o campo de texto.', 'assistant');
+                return;
+            }
+
+            if (isProcessing) {
+                addMessage('Aguarde, ainda estou processando sua mensagem anterior...', 'assistant');
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+                isRecording = false;
+            } else {
+                try {
+                    recognition.start();
+                    isRecording = true;
+                } catch (error) {
+                    console.error('Erro ao iniciar reconhecimento:', error);
+                    addMessage('Erro ao iniciar o microfone. Tente novamente.', 'assistant');
+                }
+            }
+            updateVoiceButton();
+        }
+
+        function updateVoiceButton() {
+            const button = document.getElementById('voiceButton');
+            const status = document.getElementById('statusText');
+            
+            if (isRecording) {
+                button.classList.add('active');
+                status.textContent = '🎤 Ouvindo... Pode falar!';
+            } else if (isProcessing) {
+                status.textContent = '⏳ Processando...';
+            } else {
+                button.classList.remove('active');
+                status.textContent = 'Clique para falar';
+            }
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter' && !isProcessing) {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            if (isProcessing) return;
+
+            const input = document.getElementById('textInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage(message, 'user');
+                input.value = '';
+                processMessage(message);
+            }
+        }
+
+        function addMessage(text, type) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showLoading() {
+            const chatContainer = document.getElementById('chatContainer');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.id = 'loadingIndicator';
+            loadingDiv.innerHTML = '<div class="spinner"></div><p>Pensando...</p>';
+            chatContainer.appendChild(loadingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loadingIndicator');
+            if (loading) loading.remove();
+        }
+
+        async function processMessage(message) {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            document.getElementById('sendButton').disabled = true;
+            updateVoiceButton();
+
+            showLoading();
+
+            try {
+                // Envia para ElevenLabs Agent
+                const elevenLabsResponse = await fetch('https://api.elevenlabs.io/v1/convai/conversation', {
+                    method: 'POST',
+                    headers: {
+                        'xi-api-key': CONFIG.elevenLabsKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        agent_id: CONFIG.agentId,
+                        text: message
+                    })
+                });
+
+                if (!elevenLabsResponse.ok) {
+                    throw new Error('Erro ao comunicar com a assistente');
+                }
+
+                const elevenLabsData = await elevenLabsResponse.json();
+                const agentResponse = elevenLabsData.response_text || elevenLabsData.text || 'Desculpe, não consegui processar sua mensagem.';
+                
+                hideLoading();
+                addMessage(agentResponse, 'assistant');
+
+                // Verifica se há informações de agendamento
+                const dateMatch = agentResponse.match(/(\d{2}\/\d{2}\/\d{4})/);
+                const timeMatch = agentResponse.match(/(\d{2}:\d{2})/);
+
+                if (dateMatch && timeMatch) {
+                    // Envia para Make.com para criar no Google Calendar
+                    try {
+                        await fetch(CONFIG.makeWebhook, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                user_message: message,
+                                agent_response: agentResponse,
+                                date: dateMatch[0],
+                                time: timeMatch[0],
+                                timestamp: new Date().toISOString()
+                            })
+                        });
+
+                        showEventConfirmation(agentResponse, dateMatch[0], timeMatch[0]);
+                    } catch (webhookError) {
+                        console.error('Erro ao enviar para Make.com:', webhookError);
+                        addMessage('⚠️ Agendamento registrado, mas houve um problema ao sincronizar com o calendário.', 'assistant');
+                    }
+                }
+
+                // Reproduz áudio da resposta (se disponível)
+                if (elevenLabsData.audio_url || elevenLabsData.audio) {
+                    try {
+                        const audioUrl = elevenLabsData.audio_url || elevenLabsData.audio;
+                        const audio = new Audio(audioUrl);
+                        audio.play().catch(err => console.log('Erro ao reproduzir áudio:', err));
+                    } catch (audioError) {
+                        console.log('Áudio não disponível');
+                    }
+                }
+
+            } catch (error) {
+                hideLoading();
+                console.error('Erro completo:', error);
+                addMessage('❌ Desculpe, ocorreu um erro. Por favor, tente novamente.', 'assistant');
+            } finally {
+                isProcessing = false;
+                document.getElementById('sendButton').disabled = false;
+                updateVoiceButton();
+            }
+        }
+
+        function showEventConfirmation(description, date, time) {
+            const container = document.getElementById('eventConfirmation');
+            
+            // Extrai descrição do evento da resposta
+            const eventName = description.split('\n')[0] || 'Seu compromisso';
+            
+            container.innerHTML = `
+                <div class="event-card">
+                    <h4>✅ Agendamento Confirmado!</h4>
+                    <div class="event-detail">📝 ${eventName}</div>
+                    <div class="event-detail">📅 Data: ${date}</div>
+                    <div class="event-detail">🕐 Horário: ${time}</div>
+                    <div class="event-detail" style="margin-top: 10px; font-size: 13px; opacity: 0.9;">
+                        ℹ️ Você receberá lembretes automáticos no Google Calendar
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 15000);
+        }
+    </script>
+</body>
+</html>
